@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptCraft AI - Telegram Mini App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons for premium modern UI icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--tg-theme-bg-color, #0f172a);
+            color: var(--tg-theme-text-color, #f8fafc);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth custom transitions */
+        .transition-all-custom {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Custom Shimmer/Glow effect for premium items */
+        .premium-glow {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+            border: 1px solid rgba(249, 115, 22, 0.4);
+        }
+
+        .active-tab-glow {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden bg-slate-950 text-slate-100">
+
+    <!-- MAIN CONTAINER -->
+    <div class="flex-1 w-full max-w-md mx-auto p-4 flex flex-col justify-between gap-6 pb-24">
+        
+        <!-- HEADER & USER CARD -->
+        <header class="flex flex-col gap-4">
+            <div class="flex items-center justify-between bg-slate-900/60 border border-slate-800/80 p-3 rounded-2xl backdrop-blur-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md" id="userAvatar">
+                        P
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Kreator Aktif</p>
+                        <h1 class="text-sm font-semibold text-slate-200" id="userName">Guest Kreatif</h1>
+                    </div>
+                </div>
+                
+                <!-- CREDIT CHIP -->
+                <div onclick="switchTab('earn')" class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full cursor-pointer hover:bg-amber-500/20 transition-all-custom active:scale-95">
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse"></i>
+                    <span id="creditDisplay" class="text-xs font-bold text-amber-300">10</span>
+                    <span class="text-[10px] text-amber-500 font-bold uppercase">Kredit</span>
+                </div>
+            </div>
+
+            <!-- TAB SELECTOR -->
+            <div class="grid grid-cols-2 gap-2 bg-slate-900/40 p-1 rounded-xl border border-slate-800/60">
+                <button onclick="switchTab('image')" id="btnTabImage" class="flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all-custom text-blue-400 bg-slate-800/80 border border-blue-500/30 active-tab-glow">
+                    <i data-lucide="image" class="w-4 h-4"></i>
+                    AI Image Pro
+                </button>
+                <button onclick="switchTab('video')" id="btnTabVideo" class="flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all-custom text-slate-400 hover:text-slate-200">
+                    <i data-lucide="clapperboard" class="w-4 h-4"></i>
+                    Skrip Sinematik
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENT SECTIONS -->
+        <main class="flex-1 flex flex-col justify-start">
+            
+            <!-- TAB 1: IMAGE PROMPT OPTIMIZER -->
+            <section id="tabImage" class="space-y-4">
+                <div class="bg-slate-900/40 border border-slate-850 p-4 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                            <span class="p-1 rounded-lg bg-blue-500/10 text-blue-400"><i data-lucide="sparkles" class="w-4 h-4"></i></span>
+                            Image Prompt Optimizer
+                        </h2>
+                        <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2.5 py-0.5 rounded-full font-semibold border border-blue-500/20">Biaya: 1 Kredit</span>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs text-slate-400 font-semibold">Ide Gambar Kasual Anda:</label>
+                        <textarea id="imageInput" class="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none transition-all-custom min-h-[90px]" placeholder="Contoh: kucing astronot duduk di bulan megang kopi susu..."></textarea>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="text-xs text-slate-400 font-semibold">Gaya Seni (Style):</label>
+                            <select id="imageStyle" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+                                <option value="Photorealistic & Cinematic">Fotorealistik (3D Real)</option>
+                                <option value="Futuristic Cyberpunk">Cyberpunk / Neon</option>
+                                <option value="Japanese Anime Aesthetic">Anime / Ilustrasi Ghibli</option>
+                                <option value="Surrealist Fantasy Art">Imaginatif / Surrealis</option>
+                                <option value="Minimalist Flat Design">Minimalis / Vector</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs text-slate-400 font-semibold">Aspek Rasio (Size):</label>
+                            <select id="imageRatio" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+                                <option value="16:9 (Landscape)">16:9 (Layar Lebar)</option>
+                                <option value="9:16 (Portrait)">9:16 (Story/TikTok)</option>
+                                <option value="1:1 (Square)">1:1 (Kotak Feed)</option>
+                                <option value="4:3 (Classic)">4:3 (Klasik)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="generateImagePrompt()" id="btnGenerateImage" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-all-custom flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4 fill-white"></i>
+                        Optimasi Sekarang
+                    </button>
+                </div>
+            </section>
+
+            <!-- TAB 2: CINEMATIC VIDEO SCRIPT (PREMIUM) -->
+            <section id="tabVideo" class="hidden space-y-4">
+                <div class="bg-slate-900/40 border border-slate-850 p-4 rounded-2xl space-y-4 premium-glow">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                            <span class="p-1 rounded-lg bg-amber-500/10 text-amber-400"><i data-lucide="film" class="w-4 h-4"></i></span>
+                            Cinematic Script (Nano Banana)
+                        </h2>
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full font-semibold border border-amber-500/30">Biaya: 5 Kredit</span>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs text-slate-400 font-semibold">Konsep / Ide Video Pendek Anda:</label>
+                        <textarea id="videoInput" class="w-full bg-slate-950/80 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none transition-all-custom min-h-[90px]" placeholder="Contoh: video promosi kafe kopi estetis di sore hari yang damai..."></textarea>
+                    </div>
+
+                    <!-- Video Options Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="text-xs text-slate-400 font-semibold">Vibe & Warna:</label>
+                            <select id="videoVibe" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
+                                <option value="Moody Warm Cinematic Coffee Shop">Warm / Cozy / Moody</option>
+                                <option value="Futuristic Sci-Fi Cyber Aesthetic">Sci-Fi Neon / Dingin</option>
+                                <option value="Sunny Retro Vintage 90s Film">Retro Vintage 90-an</option>
+                                <option value="Dramatic High Contrast Monochrome">Monokrom Dramatis</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs text-slate-400 font-semibold">Tempo Potongan:</label>
+                            <select id="videoPace" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
+                                <option value="Slow atmospheric cinematic long takes">Lambat & Sinematik</option>
+                                <option value="Fast-paced dynamic action cuts">Cepat & Dinamis</option>
+                                <option value="Smooth elegant glide with gimbal pans">Elegan (Gimbal Glide)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="generateVideoScript()" id="btnGenerateVideo" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 py-3 rounded-xl font-extrabold text-sm shadow-lg shadow-amber-950/20 active:scale-[0.98] transition-all-custom flex items-center justify-center gap-2">
+                        <i data-lucide="crown" class="w-4 h-4 fill-slate-950"></i>
+                        Hasilkan Skrip Lengkap
+                    </button>
+                </div>
+            </section>
+
+            <!-- TAB 3: EARN CREDITS -->
+            <section id="tabEarn" class="hidden space-y-4">
+                <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl text-center space-y-4">
+                    <div class="w-16 h-16 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/20">
+                        <i data-lucide="zap" class="w-8 h-8 fill-amber-400"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-200">Kehabisan Energi?</h2>
+                        <p class="text-xs text-slate-400 mt-1 max-w-[260px] mx-auto">Tonton video iklan singkat selama 15 detik untuk mendapatkan 5 kredit gratis secara instan!</p>
+                    </div>
+
+                    <!-- Rewarded Ad Button -->
+                    <button onclick="triggerRewardedAd()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-emerald-950/20 active:scale-[0.98] transition-all-custom flex items-center justify-center gap-2">
+                        <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+                        Tonton Iklan (+5 Kredit)
+                    </button>
+                    
+                    <div class="text-[11px] text-slate-500">
+                        Sponsor resmi didukung oleh jaringan Monetag Ad SDK.
+                    </div>
+                </div>
+            </section>
+
+            <!-- RESULTS SECTION -->
+            <section id="resultsSection" class="hidden mt-5 space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span>
+                        Hasil Racikan AI
+                    </span>
+                    <button onclick="copyToClipboard()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold active:scale-95 transition-all-custom">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        Salin Hasil
+                    </button>
+                </div>
+
+                <!-- Markdown output viewer -->
+                <div id="outputContainer" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-xs text-slate-300 leading-relaxed max-h-[300px] overflow-y-auto font-mono whitespace-pre-wrap no-scrollbar">
+                    Hasil optimasi prompt akan diletakkan di bagian ini...
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- AD SIMULATION MODAL (POPUP) -->
+    <div id="adModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-between p-6">
+        <div class="flex items-center justify-between">
+            <span class="bg-white/10 px-3 py-1 rounded-full text-[10px] text-slate-300 font-semibold border border-white/10 tracking-wider uppercase">Sponsor Ad</span>
+            <div id="adCountdown" class="w-10 h-10 rounded-full border-2 border-emerald-500 flex items-center justify-center text-xs font-bold text-emerald-400 bg-emerald-950/20">
+                15
+            </div>
+        </div>
+
+        <!-- Simulated Premium Ad Content -->
+        <div class="flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-xs mx-auto">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 via-orange-500 to-yellow-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-orange-500/20 animate-bounce">
+                <i data-lucide="gift" class="w-10 h-10 fill-slate-950"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-lg font-black text-white">Nano Banana Premium Pro</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Ciptakan video AI memukau dengan sekali sentuh. Skrip, visual, hingga editing instan di saku Anda.</p>
+            </div>
+            <div class="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-500/20">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                Gratis +5 Kredit Setelah Selesai
+            </div>
+        </div>
+
+        <div class="space-y-3 text-center">
+            <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                <div id="adProgressBar" class="bg-emerald-500 h-1.5 w-0 transition-all duration-1000 ease-linear"></div>
+            </div>
+            <p class="text-[10px] text-slate-500">Iklan akan otomatis ditutup saat timer habis.</p>
+        </div>
+    </div>
+
+    <!-- FLOATING TAB BAR FOR BOTTOM NAVIGATION -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/90 border-t border-slate-800/80 backdrop-blur-lg grid grid-cols-3 py-2 px-4 z-40">
+        <button onclick="switchTab('image')" id="navTabImage" class="flex flex-col items-center justify-center py-1 gap-1 text-blue-500">
+            <i data-lucide="image" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Gambar</span>
+        </button>
+        <button onclick="switchTab('video')" id="navTabVideo" class="flex flex-col items-center justify-center py-1 gap-1 text-slate-500 hover:text-slate-300">
+            <i data-lucide="clapperboard" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Skrip</span>
+        </button>
+        <button onclick="switchTab('earn')" id="navTabEarn" class="flex flex-col items-center justify-center py-1 gap-1 text-slate-500 hover:text-slate-300 relative">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Earn</span>
+            <span class="absolute top-1 right-8 w-2 h-2 rounded-full bg-amber-400 fill-amber-400 animate-ping"></span>
+        </button>
+    </nav>
+
+    <!-- FLOATING NOTIFICATION BOX (TOASTS) -->
+    <div id="toastBox" class="fixed top-4 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-800 text-slate-200 text-xs px-4 py-3 rounded-xl shadow-2xl z-50 hidden flex items-center gap-2 max-w-xs transition-all-custom">
+        <i data-lucide="info" class="w-4 h-4 text-blue-400 shrink-0"></i>
+        <span id="toastMessage">Pesan sistem...</span>
+    </div>
+
+    <script>
+        // STATE STORAGE & CONFIGURATION
+        const CONFIG = {
+            apiKey: "", // Keyless execution inside canvas environment
+            appId: typeof __app_id !== 'undefined' ? __app_id : 'promptcraft-tma'
+        };
+
+        let state = {
+            credits: parseInt(localStorage.getItem('prompt_credits') || '10'),
+            activeTab: 'image',
+            user: {
+                id: 'guest_' + Math.floor(Math.random() * 10000),
+                name: 'Guest Kreatif'
+            }
+        };
+
+        // Initialize Telegram WebApp SDK
+        const tg = window.Telegram.WebApp;
+        
+        window.onload = function() {
+            // Process Telegram User details
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const tgUser = tg.initDataUnsafe.user;
+                state.user.id = tgUser.id;
+                state.user.name = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name} ${tgUser.last_name || ''}`;
+                
+                // Customize App style based on Telegram Theme variables
+                document.body.style.backgroundColor = 'var(--tg-theme-bg-color, #0f172a)';
+                document.body.style.color = 'var(--tg-theme-text-color, #f8fafc)';
+            }
+
+            // Sync user UI
+            document.getElementById('userName').innerText = state.user.name;
+            document.getElementById('userAvatar').innerText = state.user.name.charAt(0).toUpperCase();
+            updateCreditsDisplay();
+            
+            // Render Lucide icons
+            lucide.createIcons();
+            
+            tg.ready();
+            tg.expand();
+        };
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toastBox');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.innerText = message;
+            
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function updateCreditsDisplay() {
+            document.getElementById('creditDisplay').innerText = state.credits;
+            localStorage.setItem('prompt_credits', state.credits.toString());
+        }
+
+        // NAVIGATION TABS CONTROL
+        function switchTab(tabName) {
+            state.activeTab = tabName;
+            
+            // Hide all tab screens
+            document.getElementById('tabImage').classList.add('hidden');
+            document.getElementById('tabVideo').classList.add('hidden');
+            document.getElementById('tabEarn').classList.add('hidden');
+
+            // Reset navigation menu styling
+            const tabs = ['image', 'video', 'earn'];
+            tabs.forEach(t => {
+                const navBtn = document.getElementById('navTab' + t.charAt(0).toUpperCase() + t.slice(1));
+                navBtn.className = "flex flex-col items-center justify-center py-1 gap-1 text-slate-500 hover:text-slate-300 relative";
+            });
+
+            // Set active styles & show elements
+            const activeNav = document.getElementById('navTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            
+            if (tabName === 'image') {
+                document.getElementById('tabImage').classList.remove('hidden');
+                activeNav.className = "flex flex-col items-center justify-center py-1 gap-1 text-blue-500 relative";
+                
+                document.getElementById('btnTabImage').className = "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all-custom text-blue-400 bg-slate-800/80 border border-blue-500/30 active-tab-glow";
+                document.getElementById('btnTabVideo').className = "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all-custom text-slate-400 hover:text-slate-200";
+            } else if (tabName === 'video') {
+                document.getElementById('tabVideo').classList.remove('hidden');
+                activeNav.className = "flex flex-col items-center justify-center py-1 gap-1 text-amber-500 relative";
+                
+                document.getElementById('btnTabImage').className = "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all-custom text-slate-400 hover:text-slate-200";
+                document.getElementById('btnTabVideo').className = "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all-custom text-amber-400 bg-slate-800/80 border border-amber-500/30 active-tab-glow";
+            } else if (tabName === 'earn') {
+                document.getElementById('tabEarn').classList.remove('hidden');
+                activeNav.className = "flex flex-col items-center justify-center py-1 gap-1 text-emerald-500 relative";
+            }
+        }
+
+        async function callGeminiAPI(systemPrompt, userPrompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${CONFIG.apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: `System Instruction: ${systemPrompt}\nUser Input: ${userPrompt}` }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1024,
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Gagal memanggil API");
+
+                const result = await response.json();
+                const outputText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!outputText) throw new Error("Format respons tidak valid");
+                
+                return outputText;
+            } catch (error) {
+                console.error(error);
+                throw error;
+            }
+        }
+
+        // IMAGE GENERATION CONTROLLER (1 CREDIT)
+        async function generateImagePrompt() {
+            const inputVal = document.getElementById('imageInput').value.trim();
+            const style = document.getElementById('imageStyle').value;
+            const ratio = document.getElementById('imageRatio').value;
+
+            if (!inputVal) {
+                showToast("Tolong tuliskan konsep gambar terlebih dahulu!");
+                return;
+            }
+
+            if (state.credits < 1) {
+                showToast("Kredit Anda habis! Silakan tambah di tab Earn.");
+                switchTab('earn');
+                return;
+            }
+
+            // Deduct credits
+            state.credits -= 1;
+            updateCreditsDisplay();
+
+            const btn = document.getElementById('btnGenerateImage');
+            const resultsSec = document.getElementById('resultsSection');
+            const outputBox = document.getElementById('outputContainer');
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin mr-2">&#9696;</span> Meracik prompt gambar...`;
+            resultsSec.classList.remove('hidden');
+            outputBox.innerText = "Sihir kecerdasan buatan sedang bekerja... Mohon tunggu.";
+
+            const systemPrompt = "Anda adalah seorang AI Prompt Engineer ahli untuk Midjourney, Stable Diffusion, dan DALL-E. " +
+                "Tugas Anda adalah mengambil konsep sederhana dari user dan memperluasnya menjadi prompt sinematik fotorealistik ultra-detail " +
+                "dengan pencahayaan memukau (misalnya: volumetric lighting, cinematic color grading, Unreal Engine 5 render), detail lensa, dan menyertakan rasio gambar yang sesuai. " +
+                "Berikan teks prompt siap pakai tanpa dialog pembuka.";
+
+            const userPromptText = `Konsep: ${inputVal}. Gaya Artistik: ${style}. Rasio: ${ratio}.`;
+
+            try {
+                const resultText = await callGeminiAPI(systemPrompt, userPromptText);
+                outputBox.innerText = resultText;
+                showToast("Sukses meramu prompt gambar!");
+            } catch (error) {
+                outputBox.innerText = "Maaf, terjadi kendala saat menghubungkan ke server AI. Kredit Anda telah dikembalikan.";
+                state.credits += 1;
+                updateCreditsDisplay();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="zap" class="w-4 h-4 fill-white"></i> Optimasi Sekarang`;
+                lucide.createIcons();
+            }
+        }
+
+        // VIDEO SCRIPT GENERATION CONTROLLER (5 CREDITS)
+        async function generateVideoScript() {
+            const inputVal = document.getElementById('videoInput').value.trim();
+            const vibe = document.getElementById('videoVibe').value;
+            const pace = document.getElementById('videoPace').value;
+
+            if (!inputVal) {
+                showToast("Tolong tuliskan konsep cerita video terlebih dahulu!");
+                return;
+            }
+
+            if (state.credits < 5) {
+                showToast("Butuh minimal 5 kredit untuk memanggil AI Skrip Premium.");
+                switchTab('earn');
+                return;
+            }
+
+            // Deduct credits
+            state.credits -= 5;
+            updateCreditsDisplay();
+
+            const btn = document.getElementById('btnGenerateVideo');
+            const resultsSec = document.getElementById('resultsSection');
+            const outputBox = document.getElementById('outputContainer');
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin mr-2">&#9696;</span> Menulis skrip premium...`;
+            resultsSec.classList.remove('hidden');
+            outputBox.innerText = "Merangkai adegan sinematik berbasis teknik Nano Banana... Ini memerlukan waktu sedikit lebih lama.";
+
+            const systemPrompt = "Anda adalah sutradara film & prompt engineer video sinematik kelas dunia. " +
+                "Buat skrip video pendek (TikTok/Reels/Shorts) berdurasi 15-30 detik dibagi menjadi 3 atau 4 Scene. " +
+                "Untuk SETIAP adegan (Scene), Anda WAJIB memberikan detail berikut:\n" +
+                "1. Judul Scene & Durasi perkiraan.\n" +
+                "2. Visual/Adegan: Deskripsikan objek, aksi, dan emosi secara sinematik.\n" +
+                "3. Kamera & Gerakan: Rekomendasikan Angle Kamera (misal: Close-up, Wide-shot) dan Pergerakan Kamera (misal: Orbit, Slow Tracking Pan, Drone Glide).\n" +
+                "4. Prompt Video AI: Tuliskan prompt siap pakai untuk generator video seperti Sora, Luma, atau Runway Gen-3.\n" +
+                "Gunakan format penulisan yang rapi, bersih, dan mudah dibaca.";
+
+            const userPromptText = `Ide Video: ${inputVal}. Suasana & Warna (Vibe): ${vibe}. Tempo Gerakan: ${pace}.`;
+
+            try {
+                const resultText = await callGeminiAPI(systemPrompt, userPromptText);
+                outputBox.innerText = resultText;
+                showToast("Skrip sinematik Anda selesai diproduksi!");
+            } catch (error) {
+                outputBox.innerText = "Gagal menghasilkan skrip. Silakan periksa koneksi Anda. Kredit telah dikembalikan.";
+                state.credits += 5;
+                updateCreditsDisplay();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="crown" class="w-4 h-4 fill-slate-950"></i> Hasilkan Skrip Lengkap`;
+                lucide.createIcons();
+            }
+        }
+
+        // CLIPBOARD INTERACTION (HTML Standard Iframe Compatible)
+        function copyToClipboard() {
+            const outputBox = document.getElementById('outputContainer');
+            const textToCopy = outputBox.innerText;
+
+            if (textToCopy.startsWith("Hasil optimasi") || textToCopy.startsWith("Sihir kecerdasan") || textToCopy.startsWith("Merangkai adegan")) {
+                showToast("Tidak ada hasil valid untuk disalin!");
+                return;
+            }
+
+            // High compatibility fallback for iframe copy constraints
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("Salin sukses! Silakan tempel di aplikasi AI Anda.");
+                } else {
+                    showToast("Gagal menyalin secara otomatis.");
+                }
+            } catch (err) {
+                showToast("Terjadi kendala saat menyalin.");
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // REWARDED ADS SIMULATION SYSTEM
+        function triggerRewardedAd() {
+            const modal = document.getElementById('adModal');
+            const countdownEl = document.getElementById('adCountdown');
+            const progressBar = document.getElementById('adProgressBar');
+
+            modal.classList.remove('hidden');
+            
+            let timeLeft = 15;
+            countdownEl.innerText = timeLeft;
+            progressBar.style.width = '0%';
+
+            // Start animation progress bar smoothly
+            setTimeout(() => {
+                progressBar.style.width = '100%';
+            }, 100);
+
+            const interval = setInterval(() => {
+                timeLeft -= 1;
+                countdownEl.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    
+                    // Reward the user
+                    state.credits += 5;
+                    updateCreditsDisplay();
+                    
+                    // Close Ad Modal
+                    modal.classList.add('hidden');
+                    showToast("Selamat! +5 Kredit berhasil ditambahkan.");
+                    switchTab('image');
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
