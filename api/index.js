@@ -10,7 +10,7 @@ app.use(express.json());
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // JALUR 1: OPTIMASI PROMPT GAMBAR (1 KREDIT)
-app.post('/api/image-prompt', async (req, res) => {
+app.post('/image-prompt', async (req, res) => {
     const { userPrompt } = req.body;
     if (!userPrompt) return res.status(400).json({ error: 'Prompt kosong' });
 
@@ -30,7 +30,7 @@ app.post('/api/image-prompt', async (req, res) => {
 });
 
 // JALUR 2: SKRIP VIDEO SINEMATIK (5 KREDIT)
-app.post('/api/video-script', async (req, res) => {
+app.post('/video-script', async (req, res) => {
     const { userPrompt } = req.body;
     if (!userPrompt) return res.status(400).json({ error: 'Konsep kosong' });
 
