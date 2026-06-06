@@ -374,38 +374,38 @@
             }
         }
 
-        async function callGeminiAPI(systemPrompt, userPrompt) {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${CONFIG.apiKey}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: `System Instruction: ${systemPrompt}\nUser Input: ${userPrompt}` }] }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 1024,
-                }
-            };
+    async function callGeminiAPI(systemPrompt, userPrompt) {
+    // Tentukan endpoint otomatis berdasarkan isi sistem prompt agar fleksibel
+    // Jika ada kata 'sutradara' atau 'skrip', berarti itu permintaan video script
+    const isVideo = systemPrompt.toLowerCase().includes('sutradara') || systemPrompt.toLowerCase().includes('skrip');
+    const endpoint = isVideo ? '/api/video-script' : '/api/image-prompt';
 
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+    try {
+        // Menembak ke backend Vercel Anda yang aman (API Key ada di sana)
+        const response = await fetch(`https://promptengine-delta.vercel.app${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                userPrompt: userPrompt // Mengirimkan teks input user ke backend
+            })
+        });
 
-                if (!response.ok) throw new Error("Gagal memanggil API");
-
-                const result = await response.json();
-                const outputText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!outputText) throw new Error("Format respons tidak valid");
-                
-                return outputText;
-            } catch (error) {
-                console.error(error);
-                throw error;
-            }
+        if (!response.ok) {
+            throw new Error('Respons server tidak sukses');
         }
 
-        // IMAGE GENERATION CONTROLLER (1 CREDIT)
+        const data = await response.json();
+        return data.result; // Mengembalikan teks hasil generate dari backend
+
+    } catch (error) {
+        console.error("Error pada callGeminiAPI:", error);
+        throw error; // Melemparkan error agar ditangkap oleh blok catch di fungsi utama
+    }
+}
+
+        // IMAGE GENERATION CONTROLLER (2 CREDIT)
         async function generateImagePrompt() {
             const inputVal = document.getElementById('imageInput').value.trim();
             const style = document.getElementById('imageStyle').value;
@@ -416,14 +416,14 @@
                 return;
             }
 
-            if (state.credits < 1) {
+            if (state.credits < 2) {
                 showToast("Kredit Anda habis! Silakan tambah di tab Earn.");
                 switchTab('earn');
                 return;
             }
 
             // Deduct credits
-            state.credits -= 1;
+            state.credits -= 2;
             updateCreditsDisplay();
 
             const btn = document.getElementById('btnGenerateImage');
