@@ -7,10 +7,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Pastikan GEMINI_API_KEY sudah dimasukkan di Environment Variables Vercel
+// Inisialisasi Google AI Object
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Endpoint Image Prompt
+// Tambahan Endpoint TEST (Agar saat dibuka di browser tidak error 500)
+app.get('/api/image-prompt', (req, res) => {
+    res.json({ 
+        status: "Online", 
+        message: "Backend PromptCraft siap menerima POST request dari Telegram Mini App!" 
+    });
+});
+
+app.get('/api/video-script', (req, res) => {
+    res.json({ 
+        status: "Online", 
+        message: "Backend Video Script siap menerima POST request!" 
+    });
+});
+
+// Endpoint Utama Image Prompt (Untuk dihubungkan ke aplikasi)
 app.post('/api/image-prompt', async (req, res) => {
     const { userPrompt } = req.body;
     if (!userPrompt) return res.status(400).json({ error: 'Prompt tidak boleh kosong' });
@@ -24,7 +39,7 @@ app.post('/api/image-prompt', async (req, res) => {
     }
 });
 
-// Endpoint Video Script
+// Endpoint Utama Video Script (Untuk dihubungkan ke aplikasi)
 app.post('/api/video-script', async (req, res) => {
     const { userPrompt } = req.body;
     if (!userPrompt) return res.status(400).json({ error: 'Konsep tidak boleh kosong' });
