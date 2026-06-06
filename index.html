@@ -405,7 +405,7 @@
     }
 }
 
-        // IMAGE GENERATION CONTROLLER (2 CREDIT)
+       // IMAGE GENERATION CONTROLLER (2 CREDITS)
         async function generateImagePrompt() {
             const inputVal = document.getElementById('imageInput').value.trim();
             const style = document.getElementById('imageStyle').value;
@@ -416,13 +416,14 @@
                 return;
             }
 
+            // PERBAIKAN 1: Proteksi minimal 2 kredit sebelum eksekusi
             if (state.credits < 2) {
                 showToast("Kredit Anda habis! Silakan tambah di tab Earn.");
                 switchTab('earn');
                 return;
             }
 
-            // Deduct credits
+            // Deduct credits - Potong 2 Kredit
             state.credits -= 2;
             updateCreditsDisplay();
 
@@ -448,7 +449,9 @@
                 showToast("Sukses meramu prompt gambar!");
             } catch (error) {
                 outputBox.innerText = "Maaf, terjadi kendala saat menghubungkan ke server AI. Kredit Anda telah dikembalikan.";
-                state.credits += 1;
+                
+                // PERBAIKAN 2: Jika server error, kembalikan 2 kredit secara utuh (bukan 1)
+                state.credits += 2; 
                 updateCreditsDisplay();
             } finally {
                 btn.disabled = false;
