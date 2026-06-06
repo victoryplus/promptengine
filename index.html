@@ -382,15 +382,11 @@
 
     try {
         // Menembak ke backend Vercel Anda yang aman (API Key ada di sana)
-        const response = await fetch(`https://promptengine-delta.vercel.app/api/image-prompt${endpoint}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                userPrompt: userPrompt // Mengirimkan teks input user ke backend
-            })
-        });
+      const response = await fetch('https://promptengine-delta.vercel.app/api/image-prompt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userPrompt: userPromptText })
+});
 
         if (!response.ok) {
             throw new Error('Respons server tidak sukses');
