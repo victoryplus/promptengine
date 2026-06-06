@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
 // JALUR 1: OPTIMASI PROMPT GAMBAR (1 KREDIT)
 app.post('/image-prompt', async (req, res) => {
