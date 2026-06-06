@@ -1,16 +1,18 @@
 const express = require('express');
 const cors = require('cors');
-const { GoogleGenAI } = require('@google/generative-ai');
+// PERBAIKAN UTAMA: Cara import GoogleGenAI yang benar tanpa kurung kurawal
+const GoogleGenAI = require('@google/generative-ai').GoogleGenAI;
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Inisialisasi menggunakan API KEY dari environment variable Vercel
 const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
 // JALUR 1: OPTIMASI PROMPT GAMBAR (1 KREDIT)
-app.post('/image-prompt', async (req, res) => {
+app.post('/api/image-prompt', async (req, res) => {
     const { userPrompt } = req.body;
     if (!userPrompt) return res.status(400).json({ error: 'Prompt kosong' });
 
@@ -25,12 +27,13 @@ app.post('/image-prompt', async (req, res) => {
 
         res.json({ result: result.response.text() });
     } catch (error) {
+        console.error("Error Gambar:", error);
         res.status(500).json({ error: 'Gagal memproses prompt gambar' });
     }
 });
 
 // JALUR 2: SKRIP VIDEO SINEMATIK (5 KREDIT)
-app.post('/video-script', async (req, res) => {
+app.post('/api/video-script', async (req, res) => {
     const { userPrompt } = req.body;
     if (!userPrompt) return res.status(400).json({ error: 'Konsep kosong' });
 
@@ -45,6 +48,7 @@ app.post('/video-script', async (req, res) => {
 
         res.json({ result: result.response.text() });
     } catch (error) {
+        console.error("Error Video:", error);
         res.status(500).json({ error: 'Gagal memproses skrip video' });
     }
 });
