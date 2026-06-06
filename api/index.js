@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-// PERBAIKAN UTAMA: Menggunakan GoogleGenAI yang benar tanpa kurung kurawal hancur
+// Mengambil modul bawaan Google Gen AI SDK secara utuh
 const { GoogleGenAI } = require('@google/generative-ai');
 require('dotenv').config();
 
@@ -8,21 +8,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Inisialisasi Google AI dengan parameter objek apiKey yang valid
+// Inisialisasi menggunakan sintaks objek konfigurasi resmi SDK terbaru
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Rute tes browser (GET) agar tidak memicu crash saat Anda buka langsung
+// Endpoint Tes Browser (GET) agar tidak memicu error 500 saat diakses langsung
 app.get('/api/image-prompt', (req, res) => {
     res.json({ 
         status: "Online", 
-        message: "Backend PromptCraft aktif dan siap menerima request POST!" 
+        message: "Backend PromptCraft sukses berjalan dan siap menerima request POST!" 
     });
 });
 
 app.get('/api/video-script', (req, res) => {
     res.json({ 
         status: "Online", 
-        message: "Backend Video Script aktif!" 
+        message: "Backend Video Script sukses berjalan!" 
     });
 });
 
